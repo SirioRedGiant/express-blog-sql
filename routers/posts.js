@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router(); // crea un server per i post
 
 //! importazione delle funzione del controller
-const postController = require("../controllers/postController");
+const postController = require("../controllers/db_postController");
 
 //^ ROTTE --> Funzioni del controller
 router.get("/", postController.index);

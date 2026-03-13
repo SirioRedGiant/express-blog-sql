@@ -1,6 +1,3 @@
-//! collego al database
-const connection = require("../data/db_blog");
-
 //note array dei post importati dalla cartella --> data
 const posts = require("../data_a_mano/posts");
 
