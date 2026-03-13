@@ -1,0 +1,25 @@
+{
+  "name": "express-blog-api-crud",
+  "version": "1.0.0",
+  "description": "Introduzione al ROUTING  ed alle convenzioni REST. Filtri di ricerca e interazioni con api e better scaffolding. Aggiunta di un post con l'utilizzo di un middleware chiamato BODY-PARSER. ",
+  "keywords": [
+    "Routing",
+    "api",
+    "crud",
+    "rest",
+    "node.js",
+    "esercitazione"
+  ],
+  "license": "ISC",
+  "author": "Sirio Ghiringhelli",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "watch": "node --watch app.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
