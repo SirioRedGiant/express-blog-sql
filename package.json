@@ -16,10 +16,11 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "watch": "node --watch app.js"
+    "start": "node --env-file=.env app.js",
+    "watch": "node --watch --env-file=.env app.js"
   },
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mysql2": "^3.19.1"
   }
 }

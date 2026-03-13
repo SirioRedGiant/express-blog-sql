@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const port = 3000;
+console.log(process.env.DB_HOST);
 
 const funnyQuote = require("./middlewares/funnyQuote");
 const notFound = require("./middlewares/notFound"); // 404

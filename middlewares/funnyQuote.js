@@ -1,4 +1,4 @@
-const quotes = require("../data/quotes");
+const quotes = require("../data_a_mano/quotes");
 
 const funnyQuote = (req, res, next) => {
   const indexRandom = Math.floor(Math.random() * quotes.length);

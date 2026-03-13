@@ -1,5 +1,8 @@
+//! collego al database
+const connection = require("../data/db_blog");
+
 //note array dei post importati dalla cartella --> data
-const posts = require("../data/posts");
+const posts = require("../data_a_mano/posts");
 
 // Aggiunto path assoluto direttamente all'array originale. Perchè sarà sempre utile
 posts.forEach(
