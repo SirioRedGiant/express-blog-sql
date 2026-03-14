@@ -80,11 +80,25 @@ const modify = (req, res) => {
 //^ Destroy - Elimina un post
 const destroy = (req, res) => {
   const id = req.params.id;
-  const sql = "";
+  const sql = "DELETE * FROM posts WHERE id = ?";
 
-  connection.query(sql, [id], (err) => {
-    if (err) return res.status(500).json({ error: "Errore del database" });
-    res.sendStatus(204);
+  connection.query(sql, [id], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Failed to delete post",
+      });
+    }
+    if (results.affectedRows === 0) {
+      return res.sendStatus(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+    res.sendStatus(204).json({
+      success: true,
+      message: `Eliminazione del post con id --> ${results[0].id} riuscita`,
+    });
   });
 };
 
