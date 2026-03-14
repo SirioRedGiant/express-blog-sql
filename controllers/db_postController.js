@@ -23,7 +23,7 @@ const index = (req, res) => {
 //^ Show - Recupera un singolo post tramite ID
 const show = (req, res) => {
   const id = req.params.id;
-  const sql = `SELECT * FROM posts WHERE id = ${id}`;
+  const sql = `SELECT * FROM posts WHERE id = ?`;
 
   connection.query(sql, [id], (err, results) => {
     if (err) {
@@ -42,6 +42,18 @@ const show = (req, res) => {
       success: true,
       message: `Dettaglio del post ${id}; ${results[0].title}`,
       result: results[0],
+      //? versione 1(corretta) --> message: `Dettaglio del post ${results[0].id}; ${results[0].title}`
+      //! versione 2(sbagliata) --> message: `Dettaglio del post ${id}; ${results[0].title}`
+
+      /** //note
+       * QUALE VERSIONE ⬇️
+        //? versione 1(corretta) --> message: `Dettaglio del post ${results[0].id}; ${results[0].title}`
+
+        //! versione 2(sbagliata) --> message: `Dettaglio del post ${id}; ${results[0].title}`
+       * Nella pratica, non cambia nulla ai fini del funzionamento dell'app. Tuttavia, la Versione 1 è considerata leggermente più solida in informatica ("Data Driven") perché i dati che mostri all'utente provengono direttamente dalla "fonte della verità" (il database) e non dai parametri dell'URL che potrebbero contenere caratteri strani o formati non corretti.
+       * 
+       //todo Perchè? --> connection.query restituisce sempre un array, anche se la query trova un solo elemento. Se inviassi results intero, l'utente riceverebbe un post dentro le parentesi quadre [{...}]. Usando l'indice 0, si invia l'oggetto pulito {...}.
+       */
     });
   });
 };
