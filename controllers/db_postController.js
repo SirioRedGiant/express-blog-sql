@@ -85,10 +85,64 @@ WHERE posts.id = ?
   });
 };
 
+/**
+//? INSERT INTO posts (title, content,image)
+//? VALUES ( `Muffin ai mirtilli`, `Ricetta gustosa e soffice per la colazione da mangiare con o senza latte o in compagnia di una spremuta o di uno yogurt gustoso`, `muffin.jpeg`) 
+--------------------------------------------------------------------------------------------------------------------------
+//? INSERT INTO post_tag (post_id, tag_id) 
+//? VALUES (6, 1), (6, 4);
+
+ */
+
 //^ Store - Crea un nuovo post
 const store = (req, res) => {
-  // Qui useremo: INSERT INTO posts (title, content, image) VALUES (?, ?, ?)
-  res.send("Post creato (logica da implementare)");
+  // i dati inviati da Postman
+  const { title, content, image, tags } = req.body;
+
+  // Prima query INSERT INTO --> il post nella tabella 'posts'
+  const sql = "INSERT INTO posts (title, content, image) VALUES (?, ?, ?)";
+
+  connection.query(sql, [title, content, image], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Database insertion failed",
+      });
+    }
+
+    // l'ID appena creato --> fondamentale per i tag
+    const newPostId = results.insertId; //note --> Con una INSERT, MySQL non ridà i dati del post, ma dà questo numero che rappresenta l'ID autoincrementale appena generato. Verrà usato per dire alla tabella post_tag: "Collega questi tag a questo nuovo post".
+
+    // se l'utente ha inviato dei tag (un array di ID), allora vanno collegati nella tabella ponte
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      // i dati per un INSERT multiplo: (post_id, tag_id), (post_id, tag_id)
+      const tagValue = tags.map((tagId) => [newPostId, tagId]);
+      const sqlTags = "INSERT INTO post_tag (post_id, tag_id) VALUES ?";
+
+      connection.query(sqlTags, [tagValue], (errTags) => {
+        if (errTags) {
+          return res.status(500).json({
+            success: false,
+            message: "Failed to associate tags to the post",
+          });
+        }
+
+        // MasterPlan A --> Post creato con successo e tag collegati
+        res.status(201).json({
+          success: true,
+          message: `Post with ID ${newPostId} succesfully created with its relative tags`,
+          result: { id: newPostId, title, content, image, tags },
+        });
+      });
+    } else {
+      // MasterPlan B --> Post creato con successo ma senza tag
+      res.status(201).json({
+        success: true,
+        message: `Post with ID ${newPostId} succesfully created but without associated tags)`,
+        result: { id: newPostId, title, content, image, tags: [] },
+      });
+    }
+  });
 };
 
 //^ Update - Modifica interamente un post
@@ -127,7 +181,7 @@ const destroy = (req, res) => {
 
     res.sendStatus(200).json({
       success: true,
-      message: `Eliminazione del post con id --> ${id} riuscita`, //fixed results[0].id è undefined. Quando si esegue una query di tipo DELETE, l'oggetto results restituito da MySQL non contiene le righe eliminate. Quindi darà errore
+      message: `Delete operation by id --> ${id} succesful`, //fixed results[0].id è undefined. Quando si esegue una query di tipo DELETE, l'oggetto results restituito da MySQL non contiene le righe eliminate. Quindi darà errore
     });
   });
 };
