@@ -23,7 +23,19 @@ const index = (req, res) => {
 //^ Show - Recupera un singolo post tramite ID
 const show = (req, res) => {
   const id = req.params.id;
-  const sql = `SELECT * FROM posts WHERE id = ?`;
+  const sql = `
+SELECT 
+posts.*,
+tags.label AS category
+FROM posts
+INNER JOIN post_tag
+ON posts.id = post_tag.post_id
+
+INNER JOIN tags
+ON tags.id = post_tag.tag_id 
+WHERE posts.id = ?
+
+  `;
 
   connection.query(sql, [id], (err, results) => {
     if (err) {
@@ -37,7 +49,17 @@ const show = (req, res) => {
         success: false,
         mesage: "Post not found",
       });
-
+    
+    const addedCategoryOnPost = {
+      id: results[0].id,
+      title: results[0].title,
+      content: results[0].content,
+      image: results[0].image,
+      //todo --- Valeria's way --> 
+      categories: results.map((row => {
+        row.category).filter(category => category !== null)
+      })
+    }
     res.json({
       success: true,
       message: `Dettaglio del post ${id}; ${results[0].title}`,
