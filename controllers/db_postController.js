@@ -49,21 +49,26 @@ WHERE posts.id = ?
         success: false,
         mesage: "Post not found",
       });
-    
+
+    // array che contiene le stringhe delle categorie e ritorna la colonna category da ogni riga del database
+    const categoriesArray = results.map((row) => {
+      return row.category;
+    });
+
+    // quello che voglio mostrare --> l'oggetto
     const addedCategoryOnPost = {
       id: results[0].id,
       title: results[0].title,
       content: results[0].content,
       image: results[0].image,
-      //todo --- Valeria's way --> 
-      categories: results.map((row => {
-        row.category).filter(category => category !== null)
-      })
-    }
+      categories: categoriesArray,
+    };
+
     res.json({
       success: true,
       message: `Dettaglio del post ${id}; ${results[0].title}`,
-      result: results[0],
+      result: addedCategoryOnPost,
+
       //? versione 1(corretta) --> message: `Dettaglio del post ${results[0].id}; ${results[0].title}`
       //! versione 2(sbagliata) --> message: `Dettaglio del post ${id}; ${results[0].title}`
 
