@@ -107,7 +107,7 @@ const modify = (req, res) => {
 //^ Destroy - Elimina un post
 const destroy = (req, res) => {
   const id = req.params.id;
-  const sql = "DELETE * FROM posts WHERE id = ?";
+  const sql = "DELETE FROM posts WHERE id = ?";
 
   connection.query(sql, [id], (err, results) => {
     if (err) {
@@ -122,9 +122,12 @@ const destroy = (req, res) => {
         message: "Post not found",
       });
     }
-    res.sendStatus(204).json({
+
+    //note problema del res.sendStatus(204) --> Il codice 204 No Content significa "successo, ma non c'è nulla da inviare nel corpo della risposta". Se si usa res.sendStatus(204), Express chiude immediatamente la connessione. Non si può aggiungere un .json() dopo un 204, perché il protocollo HTTP non lo permette. Se si vuole inviare un messaggio di conferma, si può usare lo stato 200.
+
+    res.sendStatus(200).json({
       success: true,
-      message: `Eliminazione del post con id --> ${results[0].id} riuscita`,
+      message: `Eliminazione del post con id --> ${id} riuscita`, //fixed results[0].id è undefined. Quando si esegue una query di tipo DELETE, l'oggetto results restituito da MySQL non contiene le righe eliminate. Quindi darà errore
     });
   });
 };
