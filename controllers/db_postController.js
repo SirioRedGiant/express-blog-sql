@@ -85,7 +85,7 @@ WHERE posts.id = ?
   });
 };
 
-/**
+/** ESEMPIO UTILIZZO IN MY SQL
 //? INSERT INTO posts (title, content,image)
 //? VALUES ( `Muffin ai mirtilli`, `Ricetta gustosa e soffice per la colazione da mangiare con o senza latte o in compagnia di una spremuta o di uno yogurt gustoso`, `muffin.jpeg`) 
 --------------------------------------------------------------------------------------------------------------------------
@@ -145,17 +145,161 @@ const store = (req, res) => {
   });
 };
 
+/** ESEMPIO UTILIZZO IN MYSQL
+//?   UPDATE posts
+//?   SET title = 'pisda1', content = 'asfdfs dsfsdga', image = 'pisda.jpeg'
+//?   WHERE id = 7;
+//?   
+//?   # Prima pulisco i vecchi tag del post 7
+//?   
+//?   DELETE FROM post_tag WHERE post_id = 7;
+//?   
+//?   # poi inserisco i nuovi legami 
+//?   
+//?   INSERT INTO post_tag (post_id, tag_id)
+//?   VALUES (7, 1), (7, 2);
+ */
+
 //^ Update - Modifica interamente un post
 const update = (req, res) => {
+  // Recupero dell'ID dai parametri e i dati dal body
   const id = req.params.id;
-  // Qui useremo: UPDATE posts SET title = ?, content = ?, image = ? WHERE id = ?
-  res.send(`Post ${id} aggiornato (logica da implementare)`);
+  const { title, content, image, tags } = req.body;
+
+  // Query per aggiornare i dati base del post
+  const sqlPost =
+    "UPDATE posts SET title = ?, content = ?, image = ? WHERE id = ?";
+
+  connection.query(sqlPost, [title, content, image, id], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Database update failed",
+      });
+    }
+
+    // Se l'ID del post non esiste
+    if (results.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+    }
+
+    // Pulizia vecchi tag
+    const sqlDeleteTags = "DELETE FROM post_tag WHERE post_id = ?";
+
+    connection.query(sqlDeleteTags, [id], (errDelete) => {
+      if (errDelete) {
+        return res.status(500).json({
+          success: false,
+          message: "Failed to clear old tags",
+        });
+      }
+
+      // Se l'utente ha inviato nuovi tag
+      if (tags && Array.isArray(tags) && tags.length > 0) {
+        const postTagValues = tags.map((tagId) => [id, tagId]);
+        const sqlInsertTags = "INSERT INTO post_tag (post_id, tag_id) VALUES ?";
+
+        connection.query(sqlInsertTags, [postTagValues], (errInsert) => {
+          if (errInsert) {
+            return res.status(500).json({
+              success: false,
+              message: "Failed to update tags",
+            });
+          }
+          // MasterPlan A: Post e Tag aggiornati
+          res.json({
+            success: true,
+            message: `Post ${id} and tags updated successfully`,
+            result: { id, title, content, image, tags },
+          });
+        });
+      } else {
+        // MasterPlan B: Post aggiornato, ma senza i tag perchè eliminati
+        res.json({
+          success: true,
+          message: `Post ${id} updated successfully with no tags`,
+          result: { id, title, content, image, tags: [] },
+        });
+      }
+    });
+  });
 };
+
+/** 
+//? # Caso A: Modifico solo l'immagine
+//? 
+//? UPDATE posts 
+//? SET image = 'nuova_foto.jpeg' 
+//? WHERE id = 7;
+//? 
+//? # Caso B: Modifico solo il titolo
+//? 
+//? UPDATE posts 
+//? SET title = 'Muffin SuperFast', 
+//? WHERE id = 7; 
+//? 
+//? # Caso C: ....ecc
+*/
 
 //^ Modify - Modifica parzialmente un post
 const modify = (req, res) => {
   const id = req.params.id;
-  res.send(`Post ${id} modificato parzialmente (logica da implementare)`);
+  const { title, content, image, tags } = req.body;
+
+  //NOTE CONTENITORI PER LA COSTRUZIONE
+  let setQuery = []; //  le stringhe --> "title = ?" | "content = ?" | "image = ?"
+  let values = []; //  i valori
+
+  // Controllo dei campi che possono essere inseriti nella query
+  if (title) {
+    setQuery.push("title = ?");
+    values.push(title);
+  }
+
+  if (content) {
+    setQuery.push("content = ?");
+    values.push(content);
+  }
+
+  if (image) {
+    setQuery.push("image = ?");
+    values.push(image);
+  }
+
+  // Se l'utente non ha inviato nulla --> return dell'errore e stop // aggiunto controllo per i tags
+  if (setQuery.length === 0 && !tags) {
+    return res.status(400).json({
+      success: false,
+      message: "No data for the partial-update provided",
+    });
+  }
+
+  // l'ID alla fine per il WHERE id = ?
+  values.push(id);
+
+  // Unione query: "title = ?, content = ?"
+  const sql = `UPDATE posts SET ${setQuery.join(", ")} WHERE id = ?`;
+
+  connection.query(sql, values, (err, results) => {
+    if (err)
+      return res.status(500).json({
+        success: false,
+        message: "Database partial-update failed",
+      });
+    if (results.affectedRows === 0)
+      return res.status(404).json({
+        success: false,
+        message: "Post not found",
+      });
+
+    res.json({
+      success: true,
+      message: `Post ${id} modified`,
+    });
+  });
 };
 
 //^ Destroy - Elimina un post
@@ -171,7 +315,7 @@ const destroy = (req, res) => {
       });
     }
     if (results.affectedRows === 0) {
-      return res.sendStatus(404).json({
+      return res.status(404).json({
         success: false,
         message: "Post not found",
       });
