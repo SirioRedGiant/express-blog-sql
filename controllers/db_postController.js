@@ -295,10 +295,49 @@ const modify = (req, res) => {
         message: "Post not found",
       });
 
-    res.json({
-      success: true,
-      message: `Post ${id} modified`,
-    });
+    if (tags && Array.isArray(tags)) {
+      // DELETE dei vecchi tag
+      const sqlDelete = "DELETE FROM post_tag WHERE post_id = ?";
+      connection.query(sqlDelete, [id], (err) => {
+        if (err)
+          return res
+            .status(500)
+            .json({ success: false, message: "Error clearing tags" });
+
+        // Se l'array non è vuoto, INSERT INTO dei nuovi value
+        if (tags.length > 0) {
+          const tagValues = tags.map((tagId) => [id, tagId]);
+          const sqlInsert = "INSERT INTO post_tag (post_id, tag_id) VALUES ?";
+
+          connection.query(sqlInsert, [tagValues], (err) => {
+            if (err) {
+              return res.status(500).json({
+                success: false,
+                message: "Inserting tags failed",
+              });
+            }
+
+            // Risposta finale --> se sono stati aggiornati anche i tag
+            return res.json({
+              success: true,
+              message: `Post with ID --> ${id} updated and tags updated`,
+            });
+          });
+        } else {
+          // Risposta finale --> se sono stati aggiornati solo le query mentre i tag sono stati svuotati --> tags: []
+          return res.json({
+            success: true,
+            message: `Post with ID --> ${id} updated and tags cleared`,
+          });
+        }
+      });
+    } else {
+      // 3. Se tags è stato omesso
+      res.json({
+        success: true,
+        message: `Only post with ${id} is modified`,
+      });
+    }
   });
 };
 
@@ -323,7 +362,7 @@ const destroy = (req, res) => {
 
     //note problema del res.sendStatus(204) --> Il codice 204 No Content significa "successo, ma non c'è nulla da inviare nel corpo della risposta". Se si usa res.sendStatus(204), Express chiude immediatamente la connessione. Non si può aggiungere un .json() dopo un 204, perché il protocollo HTTP non lo permette. Se si vuole inviare un messaggio di conferma, si può usare lo stato 200.
 
-    res.sendStatus(200).json({
+    res.status(200).json({
       success: true,
       message: `Delete operation by id --> ${id} succesful`, //fixed results[0].id è undefined. Quando si esegue una query di tipo DELETE, l'oggetto results restituito da MySQL non contiene le righe eliminate. Quindi darà errore
     });
