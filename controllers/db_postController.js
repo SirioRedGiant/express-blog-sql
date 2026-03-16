@@ -12,13 +12,7 @@ const index = (req, res) => {
         message: "Database query failed",
       });
     }
-    // Modifica dell'estensione per ogni post dell'array
-    const mappedResults = results.map((post) => {
-      return {
-        ...post,
-        image: post.image.replace(".avif", ".jpeg"),
-      };
-    });
+
     res.json({
       success: true,
       message: "Prodotti & Descrizione",
@@ -67,7 +61,7 @@ WHERE posts.id = ?
       id: results[0].id,
       title: results[0].title,
       content: results[0].content,
-      image: results[0].image.replace(".avif", ".jpeg"), // modifica estensione immagine
+      image: results[0].image,
       categories: categoriesArray,
     };
 
