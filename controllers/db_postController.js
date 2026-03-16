@@ -12,6 +12,13 @@ const index = (req, res) => {
         message: "Database query failed",
       });
     }
+    // Modifica dell'estensione per ogni post dell'array
+    const mappedResults = results.map((post) => {
+      return {
+        ...post,
+        image: post.image.replace(".avif", ".jpeg"),
+      };
+    });
     res.json({
       success: true,
       message: "Prodotti & Descrizione",
@@ -60,7 +67,7 @@ WHERE posts.id = ?
       id: results[0].id,
       title: results[0].title,
       content: results[0].content,
-      image: results[0].image,
+      image: results[0].image.replace(".avif", ".jpeg"), // modifica estensione immagine
       categories: categoriesArray,
     };
 
@@ -300,9 +307,10 @@ const modify = (req, res) => {
       const sqlDelete = "DELETE FROM post_tag WHERE post_id = ?";
       connection.query(sqlDelete, [id], (err) => {
         if (err)
-          return res
-            .status(500)
-            .json({ success: false, message: "Error clearing tags" });
+          return res.status(500).json({
+            success: false,
+            message: "Error clearing tags",
+          });
 
         // Se l'array non è vuoto, INSERT INTO dei nuovi value
         if (tags.length > 0) {
